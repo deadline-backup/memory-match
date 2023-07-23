@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import './App.css';
 import GameBoard from './GameBoard';
 import './Card.css';
@@ -18,6 +18,8 @@ function App() {
   const [openedCards, setOpenedCards] = useState([]);
   const [matchedPairs, setMatchedPairs] = useState(0);
   const [disableClick, setDisableClick] = useState(false);
+
+  const flipTimeoutRef = useRef(null);
 
   useEffect(() => {
     resetGame();
@@ -40,45 +42,56 @@ function App() {
     setBoard(newBoard);
     setOpenedCards([]);
     setMatchedPairs(0);
+    setDisableClick(false);
   };
 
   const flipCard = (row, col) => {
-    if (!board[row][col].matched && !board[row][col].flipped && !disableClick) {
+    if (!board[row][col].matched && !board[row][col].flipped && openedCards.length < 2 && !disableClick) {
       const newBoard = [...board];
       newBoard[row][col].flipped = true;
       setBoard(newBoard);
       setOpenedCards([...openedCards, { row, col }]);
+
+      if (openedCards.length === 1) {
+        setDisableClick(true);
+      }
     }
+  };
+
+  const checkMatch = () => {
+    const [card1, card2] = openedCards;
+    const newBoard = [...board];
+
+    if (newBoard[card1.row][card1.col].symbol === newBoard[card2.row][card2.col].symbol) {
+      newBoard[card1.row][card1.col].matched = true;
+      newBoard[card2.row][card2.col].matched = true;
+      setMatchedPairs(matchedPairs + 1);
+
+      if (matchedPairs + 1 === symbols.length) {
+        setTimeout(() => alert('Congratulations! You matched all pairs.'), 500);
+      }
+    } else {
+      setTimeout(() => {
+        newBoard[card1.row][card1.col].flipped = false;
+        newBoard[card2.row][card2.col].flipped = false;
+        setBoard(newBoard);
+        setOpenedCards([]);
+        setDisableClick(false);
+      }, 500);
+    }
+
+    setBoard(newBoard);
+    setOpenedCards([]);
+    setDisableClick(false);
   };
 
   useEffect(() => {
     if (openedCards.length === 2) {
-      setDisableClick(true);
-      const [card1, card2] = openedCards;
-      const newBoard = [...board];
-
-      if (newBoard[card1.row][card1.col].symbol === newBoard[card2.row][card2.col].symbol) {
-        newBoard[card1.row][card1.col].matched = true;
-        newBoard[card2.row][card2.col].matched = true;
-        setMatchedPairs(matchedPairs + 1);
-
-        if (matchedPairs + 1 === symbols.length) {
-          setTimeout(() => alert('Congratulations! You matched all pairs.'), 500);
-        }
-      } else {
-        setTimeout(() => {
-          newBoard[card1.row][card1.col].flipped = false;
-          newBoard[card2.row][card2.col].flipped = false;
-          setBoard(newBoard);
-          setOpenedCards([]);
-          setDisableClick(false);
-        }, 700); // 700ms delay before reverting the cards
-      }
-
-      setBoard(newBoard);
-      setOpenedCards([]);
+      flipTimeoutRef.current = setTimeout(checkMatch, 500);
     }
-  }, [openedCards, board, matchedPairs]);
+
+    return () => clearTimeout(flipTimeoutRef.current);
+  }, [openedCards]);
 
   return (
     <div className="App">
