@@ -77,17 +77,17 @@ function App() {
         setBoard(newBoard);
         setOpenedCards([]);
         setDisableClick(false);
-      }, 500);
+      }, 700);
     }
 
     setBoard(newBoard);
     setOpenedCards([]);
-    setDisableClick(false);
+    setDisableClick(false); // Reset the disableClick state to false after the cards are matched (whether they match or not)
   };
 
   useEffect(() => {
     if (openedCards.length === 2) {
-      flipTimeoutRef.current = setTimeout(checkMatch, 500);
+      flipTimeoutRef.current = setTimeout(checkMatch, 700);
     }
 
     return () => clearTimeout(flipTimeoutRef.current);
