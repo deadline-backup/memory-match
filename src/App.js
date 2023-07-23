@@ -18,6 +18,9 @@ function App() {
   const [openedCards, setOpenedCards] = useState([]);
   const [matchedPairs, setMatchedPairs] = useState(0);
   const [disableClick, setDisableClick] = useState(false);
+  const [isChecking, setIsChecking] = useState(false);
+  const [isFlippingBack, setIsFlippingBack] = useState(false);
+  const [flippedDuringCheck, setFlippedDuringCheck] = useState(0);
 
   const flipTimeoutRef = useRef(null);
 
@@ -54,6 +57,7 @@ function App() {
 
       if (openedCards.length === 1) {
         setDisableClick(true);
+        setIsChecking(true);
       }
     }
   };
@@ -71,27 +75,35 @@ function App() {
         setTimeout(() => alert('Congratulations! You matched all pairs.'), 500);
       }
     } else {
-      setTimeout(() => {
-        newBoard[card1.row][card1.col].flipped = false;
-        newBoard[card2.row][card2.col].flipped = false;
-        setBoard(newBoard);
-        setOpenedCards([]);
-        setDisableClick(false);
-      }, 700);
+      newBoard[card1.row][card1.col].flipped = false;
+      newBoard[card2.row][card2.col].flipped = false;
+      setIsFlippingBack(true);
     }
 
     setBoard(newBoard);
     setOpenedCards([]);
-    setDisableClick(false); // Reset the disableClick state to false after the cards are matched (whether they match or not)
+    setFlippedDuringCheck(0);
   };
 
   useEffect(() => {
     if (openedCards.length === 2) {
-      flipTimeoutRef.current = setTimeout(checkMatch, 700);
+      flipTimeoutRef.current = setTimeout(() => {
+        checkMatch();
+        setIsChecking(false);
+        setDisableClick(false);
+        setIsFlippingBack(false);
+      }, 700);
+    } else {
+      setFlippedDuringCheck(flippedDuringCheck + 1);
+      if (flippedDuringCheck === 2) {
+        setDisableClick(false);
+        setIsChecking(false);
+        setFlippedDuringCheck(0);
+      }
     }
 
     return () => clearTimeout(flipTimeoutRef.current);
-  }, [openedCards]);
+  }, [openedCards, flippedDuringCheck]);
 
   return (
     <div className="App">
