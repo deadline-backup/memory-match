@@ -15,6 +15,7 @@ function App() {
   const [cards, setCards] = useState([]);
   const [openedCards, setOpenedCards] = useState([]);
   const [matchedPairs, setMatchedPairs] = useState(0);
+  const [disableClick, setDisableClick] = useState(false);
 
   useEffect(() => {
     resetGame();
@@ -25,10 +26,11 @@ function App() {
     setCards(shuffledCards.map((symbol, index) => ({ symbol, index, flipped: false, matched: false })));
     setOpenedCards([]);
     setMatchedPairs(0);
+    setDisableClick(false);
   };
 
   const flipCard = (index) => {
-    if (openedCards.length < 2) {
+    if (openedCards.length < 2 && !disableClick) {
       const card = cards[index];
       if (!card.matched && !card.flipped) {
         const newCards = [...cards];
@@ -37,6 +39,7 @@ function App() {
         setOpenedCards([...openedCards, card]);
 
         if (openedCards.length === 1) {
+          setDisableClick(true);
           setTimeout(checkMatch, 1000);
         }
       }
@@ -62,6 +65,7 @@ function App() {
 
     setCards(newCards);
     setOpenedCards([]);
+    setDisableClick(false);
   };
 
   return (
